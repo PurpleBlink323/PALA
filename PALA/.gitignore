@@ -1,0 +1,5 @@
+*.asv
+*.mlx.autosave
+*.fig
+*.mex*
+*.slxc
