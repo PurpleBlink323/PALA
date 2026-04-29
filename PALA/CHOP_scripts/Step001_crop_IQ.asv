@@ -1,0 +1,38 @@
+function Step001_crop_IQ
+%%
+clear
+close all
+clc
+
+% get data path
+if exist('temp.mat','file')
+    load('temp.mat')
+    defaultfilepath = currentfolder;
+else
+    defaultfilepath = 'D:\VSX_Experiments\';
+end
+allfiles = uipickfiles('FilterSpec',defaultfilepath,...
+    'Prompt','Step001: Select all the IQ files to be processed',...
+    'Output','struct');
+currentfolder = allfiles(1).folder;
+
+allimagepath = {allfiles.name}';
+npath = length(allimagepath);
+
+save('temp.mat','currentfolder','allimagepath','npath');
+%%
+for ip = 1:npath
+    workingdir = allimagepath{ip};
+    IQdir = [workingdir filesep 'IQ'];
+    IQfiles = dir([IQdir filesep '*.mat']);
+    IQmat = matfile([IQfiles(1).folder filesep IQfiles(1).name]); % GEIC59D: only 1
+    %% release memory
+    save('temp.mat','ip','-append')
+    clear
+    close all
+
+    load('temp.mat')
+end
+disp('All done!')
+
+end
