@@ -62,7 +62,7 @@ for ip = 1:npath
                     str2double(answer{2})];
    
                 Enhparas.ULM.sigmaLCN = str2double(answer{3});
-                Enhparas.ULM.butter.CutoffFreq = str2double(answer{4});
+                Enhparas.ULM.butter.CutoffFreq = str2num(answer{4}); % not scalar input
     
                 ULM = Enhparas.ULM;
             end

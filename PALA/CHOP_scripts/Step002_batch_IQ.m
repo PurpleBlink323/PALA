@@ -34,7 +34,7 @@ for ip = 1:npath
     y1 = roi.y1; y2 = roi.y2; x1 = roi.x1; x2 = roi.x2;
 
     %% Save IQ batches
-    batchsize = 3000;
+    batchsize = 1000;
     nFrames = UF.NbFrames;
     batchnum = ceil(nFrames / batchsize);
     
@@ -52,6 +52,14 @@ for ip = 1:npath
         startIdx = (hhh - 1) * batchsize + 1;
         endIdx   = min(hhh * batchsize, nFrames);
     
+        batchfile = fullfile(batchdir, sprintf('IQ_batch_%03d.mat', hhh));
+        expectedSize = [y2-y1+1, x2-x1+1, endIdx-startIdx+1];
+        if isValidIQBatch(batchfile, expectedSize, startIdx, endIdx)
+            fprintf('Skipping existing batch %d/%d: frames %d to %d\n', ...
+                hhh, batchnum, startIdx, endIdx);
+            continue
+        end
+    
         fprintf('Saving batch %d/%d: frames %d to %d\n', ...
             hhh, batchnum, startIdx, endIdx);
     
@@ -64,11 +72,20 @@ for ip = 1:npath
         UFbatch.startIdx = startIdx;
         UFbatch.endIdx = endIdx;
     
-        % Save IQbatch, UFbatch, and PData
-        save(fullfile(batchdir, sprintf('IQ_batch_%03d.mat', hhh)), ...
-            'IQbatch', 'UFbatch', 'PData', '-v7.3');
+        % Save to a temporary file first so interrupted writes do not corrupt
+        % an existing usable batch.
+        tempbatchfile = fullfile(batchdir, sprintf('IQ_batch_%03d.tmp.mat', hhh));
+        save(tempbatchfile, 'IQbatch', 'UFbatch', 'PData', '-v7.3', '-nocompression');
+        if ~isValidIQBatch(tempbatchfile, expectedSize, startIdx, endIdx)
+            error('Failed to validate temporary batch file: %s', tempbatchfile);
+        end
+        [status, msg] = movefile(tempbatchfile, batchfile, 'f');
+        if ~status
+            error('Failed to move temporary batch file to: %s\nReason: %s', batchfile, msg);
+        end
     
     end
+    save([workingdir,'\PTVparas.mat'],'batchnum','-append')
 
     %% release memory
     save('temp.mat','ip','-append')
@@ -79,4 +96,37 @@ for ip = 1:npath
 end
 disp('All done!')
 
+end
+
+function isValid = isValidIQBatch(batchfile, expectedSize, startIdx, endIdx)
+isValid = false;
+if ~exist(batchfile, 'file')
+    return
+end
+
+try
+    vars = whos('-file', batchfile);
+    names = {vars.name};
+    iqIdx = strcmp(names, 'IQbatch');
+    if ~any(iqIdx) || ~isequal(vars(iqIdx).size, expectedSize)
+        return
+    end
+    if ~any(strcmp(names, 'UFbatch')) || ~any(strcmp(names, 'PData'))
+        return
+    end
+
+    loaded = load(batchfile, 'UFbatch');
+    if ~isfield(loaded, 'UFbatch') || ...
+            ~isfield(loaded.UFbatch, 'startIdx') || ...
+            ~isfield(loaded.UFbatch, 'endIdx') || ...
+            loaded.UFbatch.startIdx ~= startIdx || ...
+            loaded.UFbatch.endIdx ~= endIdx || ...
+            loaded.UFbatch.NbFrames ~= expectedSize(3)
+        return
+    end
+
+    isValid = true;
+catch
+    isValid = false;
+end
 end

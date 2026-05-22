@@ -1,4 +1,4 @@
-function Step003_SVDFilter
+function Step004_PowerDopplerVideo
 %%
 close all
 clc
@@ -11,7 +11,7 @@ else
     defaultfilepath = 'D:\VSX_Experiments\';
 end
 allfiles = uipickfiles('FilterSpec',defaultfilepath,...
-    'Prompt','Step003: Select all the cases(folder) to be processed',...
+    'Prompt','Step004: Select all the cases(folder) to be processed',...
     'Output','struct');
 currentfolder = allfiles(1).folder;
 
@@ -21,10 +21,10 @@ npath = length(allimagepath);
 save('temp.mat','currentfolder','allimagepath','npath');
 
 %% Obtain best paras
-Step003_SubStep001_TestSVD
+Step004_SubStep001_TestPowerDopplerVideo
 
-%% Perform SVD to all datasets
-Step003_SubStep002_DoSVD
+%% Create power Doppler video for all datasets
+Step004_SubStep002_DoPowerDopplerVideo
 
 disp('All done!')
 end

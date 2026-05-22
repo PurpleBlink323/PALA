@@ -31,21 +31,17 @@ for ip = 1:npath
     while parasflag == 1
     
         IQ_filt = svdEnhanceIQ(IQbatch, Enhparas);
-        figure; sliceViewer(abs(IQ_filt)); %(optional)
+        sliceViewer(abs(IQ_filt)); %(optional)
     
-        answer_accept = questdlg( ...
-            'Accept current Enhparas?', ...
-            'Parameter Check', ...
-            'Yes', 'No', 'Yes');
+        parasflag = 1-input('Accept current Enhparas? yes = 1, no = 0: '); % avoid sliceviewer window conflict
+        if parasflag == 1
     
-        if strcmp(answer_accept, 'Yes')
-            parasflag = 0;
-        else
             title1 = 'Update Enhancement Parameters';
     
             prompt = { ...
                 'ULM.SVD_cutoff low', ...
                 'ULM.SVD_cutoff high', ...
+                'ULM.sigmaLCN',...
                 'ULM.butter.CutoffFreq'};
     
             dims = [1 75];
@@ -53,7 +49,8 @@ for ip = 1:npath
             definput = { ...
                 num2str(Enhparas.ULM.SVD_cutoff(1)), ...
                 num2str(Enhparas.ULM.SVD_cutoff(2)), ...
-                num2str(Enhparas.ULM.butter.CutoffFreq)}; 
+                num2str(Enhparas.ULM.sigmaLCN), ...
+                num2str(Enhparas.ULM.butter.CutoffFreq)};
     
             answer = inputdlg(prompt, title1, dims, definput);
     
@@ -63,12 +60,14 @@ for ip = 1:npath
                 Enhparas.ULM.SVD_cutoff = [ ...
                     str2double(answer{1}), ...
                     str2double(answer{2})];
-    
-                Enhparas.ULM.butter.CutoffFreq = str2double(answer{3});
+   
+                Enhparas.ULM.sigmaLCN = str2double(answer{3});
+                Enhparas.ULM.butter.CutoffFreq = str2num(answer{4}); % not scalar input
     
                 ULM = Enhparas.ULM;
             end
         end
     end
     save(fullfile(workingdir, 'PTVparas.mat'), 'Enhparas', '-append')
+    close all
 end

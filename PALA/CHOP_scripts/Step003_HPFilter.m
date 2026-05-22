@@ -1,4 +1,4 @@
-function Step003_SVDFilter
+function Step003_HPFilter
 %%
 close all
 clc
@@ -21,10 +21,10 @@ npath = length(allimagepath);
 save('temp.mat','currentfolder','allimagepath','npath');
 
 %% Obtain best paras
-Step003_SubStep001_TestSVD
+Step003_SubStep001_TestHighpass
 
 %% Perform SVD to all datasets
-Step003_SubStep002_DoSVD
+Step003_SubStep002_DoHighpass
 
 disp('All done!')
 end

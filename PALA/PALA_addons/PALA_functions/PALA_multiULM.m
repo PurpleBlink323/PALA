@@ -48,7 +48,6 @@ IQ = abs(IQ);
 Nalgo = numel(listAlgo);
 ProcessingTime = zeros(Nalgo,1);
 
-fprintf('Processing algo: ')
 for ialgo = 1:Nalgo
     fprintf([num2str(ialgo) ' '])
     %% Detection and localization algorithm
